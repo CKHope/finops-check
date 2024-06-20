@@ -141,7 +141,20 @@ if deposit_file is not None:
         display_results['Discrepancies'] = display_results['Discrepancies'].apply(lambda x: ', '.join([f"{item['Column']}: Expected {item['Expected']}, Actual {item['Actual']}" for item in x]))
 
         # Include selected additional columns in display
-        display_columns = ['Transaction ID', 'Status', 'Discrepancies'] + selected_columns
+        display_columns = [
+            'Transaction ID', 'Status', 'Discrepancies',
+            'RC_CLEO.Lit Sell GDR/USD - Reference', 'CLEO.Lit Sell GDR/USD - Reference',
+            'RC_Deposit Amount USD', 'Deposit Amount USD',
+            'RC_GDR Client Receive', 'GDR Client Receive',
+            'RC_COGs', 'COGs',
+            'RC_Revenue', 'Revenue',
+            'RC_Mark up rate 5 - Value - Transfer transasaction & gas fee', 'Mark up rate 5 - Value - Transfer transasaction & gas fee',
+            'RC_Mark up rate 4 - Value - Business risk reserve', 'Mark up rate 4 - Value - Business risk reserve',
+            'RC_Mark up rate 3 - Value - Crypto to fiat conversion', 'Mark up rate 3 - Value - Crypto to fiat conversion',
+            'RC_Mark up rate 2 - Value - Withdrawal transasaction & gas fee', 'Mark up rate 2 - Value - Withdrawal transasaction & gas fee',
+            'RC_Mark up rate 1 - Value - Gold price fluctuation', 'Mark up rate 1 - Value - Gold price fluctuation'
+        ] + selected_columns
+
         display_results = display_results[display_columns]
 
         st.write(display_results)
