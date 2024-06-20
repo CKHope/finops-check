@@ -227,3 +227,4 @@ with st.expander("Recalculation Logic", expanded=True):
       RC_Mark up rate 1 - Value - Gold price fluctuation = Mark up rate 1 - Gold Price Fluctuation / Total Markup - For Referrence * (Revenue - COGs)
       ```
     """)
+
