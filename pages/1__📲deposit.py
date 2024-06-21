@@ -25,21 +25,24 @@ def recalculate_and_validate_deposits(df, tolerances):
         status = "Valid" if row['Amount Dc'] > 0 else "Invalid - Amount should be positive"
         discrepancies = []
         for col_name, tolerance in tolerances.items():
-            if abs(row[col_name] - row[col_name.replace('RC_', '')]) > tolerance:
-                status = f"Invalid - Discrepancy in {col_name.replace('RC_', '')}"
+            original_col = col_name.replace('RC_', '')
+            if abs(row[col_name] - row[original_col]) > tolerance:
+                status = f"Invalid - Discrepancy in {original_col}"
                 discrepancies.append({
-                    'Column': col_name.replace('RC_', ''),
-                    'Expected': row[col_name.replace('RC_', '')],
-                    'Actual': row[col_name]
+                    'Column': original_col,
+                    'Expected': row[col_name],
+                    'Actual': row[original_col]
                 })
         
         result = {
             'Transaction ID': row['Transaction ID'], 
             'Status': status, 
-            'Discrepancies': discrepancies,
-            **{col: row[col] for col in tolerances.keys()},
-            **{col.replace('RC_', ''): row[col.replace('RC_', '')] for col in tolerances.keys()}
+            'Discrepancies': discrepancies
         }
+        for col_name in tolerances.keys():
+            original_col = col_name.replace('RC_', '')
+            result[col_name] = row[col_name]
+            result[original_col] = row[original_col]
         results.append(result)
     
     return pd.DataFrame(results)
@@ -71,7 +74,11 @@ if deposit_file:
 
     deposit_results = recalculate_and_validate_deposits(deposit_df, tolerances)
     
-    display_columns = ['Transaction ID', 'Status', 'Discrepancies'] + [col for col in tolerances.keys()] + [col.replace('RC_', '') for col in tolerances.keys()] + selected_columns
+    display_columns = ['Transaction ID', 'Status', 'Discrepancies']
+    for col in tolerances.keys():
+        original_col = col.replace('RC_', '')
+        display_columns.extend([original_col, col])
+    display_columns.extend(selected_columns)
     
     st.subheader("Validation Results")
     display_results = deposit_results.copy()
