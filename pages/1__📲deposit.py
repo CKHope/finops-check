@@ -5,10 +5,10 @@ st.title('Cryptocurrency Deposit Transaction Validator')
 
 def recalculate_and_validate_deposits(df, tolerances):
     recalculations = {
-        'RC_CLEO.Lit Sell GDR/USD - Reference': lambda row: row['CLEO.Lit Buy GDR/USD - Reference'] * (100 + row['Total Markup - For Referrence']) / 100,
+        'RC_CLEO.Lit Sell GDR/USD - Reference': lambda row: row['CLEO.Lit buy X% (backup rate GDR/XAU) XAU/USD - reference'] * (100 + row['Total Markup - For Referrence']) / 100,
         'RC_Deposit Amount USD': lambda row: row['Deposit Amount OC'] * row['CLEO.lit Buy Token/USD Reference'],
         'RC_GDR Client Receive': lambda row: row['RC_Deposit Amount USD'] / row['RC_CLEO.Lit Sell GDR/USD - Reference'],
-        'RC_COGs': lambda row: row['GDR Client Receive'] * row['CLEO.Lit Buy GDR/USD - Reference'],
+        'RC_COGs': lambda row: row['GDR Client Receive'] * row['CLEO.Lit buy X% (backup rate GDR/XAU) XAU/USD - reference'],
         'RC_Revenue': lambda row: row['GDR Client Receive'] * row['RC_CLEO.Lit Sell GDR/USD - Reference'],
         'RC_Mark up rate 5 - Value - Transfer transasaction & gas fee': lambda row: row['Mark up rate 5 - Transfer transasaction & gas fee'] / row['Total Markup - For Referrence'] * (row['Revenue'] - row['COGs']),
         'RC_Mark up rate 4 - Value - Business risk reserve': lambda row: row['Mark up rate 4 - Business risk reserve'] / row['Total Markup - For Referrence'] * (row['Revenue'] - row['COGs']),
@@ -103,10 +103,10 @@ with st.expander("About This App", expanded=True):
 with st.expander("Recalculation Logic", expanded=True):
     st.markdown("""
     ### Recalculation Formulas
-    - **RC_CLEO.Lit Sell GDR/USD - Reference**: `CLEO.Lit Buy GDR/USD - Reference * (100 + Total Markup - For Referrence) / 100`
+    - **RC_CLEO.Lit Sell GDR/USD - Reference**: `CLEO.Lit buy X% (backup rate GDR/XAU) XAU/USD - reference * (100 + Total Markup - For Referrence) / 100`
     - **RC_Deposit Amount USD**: `Deposit Amount OC * CLEO.lit Buy Token/USD Reference`
     - **RC_GDR Client Receive**: `RC_Deposit Amount USD / RC_CLEO.Lit Sell GDR/USD - Reference`
-    - **RC_COGs**: `GDR Client Receive * CLEO.Lit Buy GDR/USD - Reference`
+    - **RC_COGs**: `GDR Client Receive * CLEO.Lit buy X% (backup rate GDR/XAU) XAU/USD - reference`
     - **RC_Revenue**: `GDR Client Receive * RC_CLEO.Lit Sell GDR/USD - Reference`
     - **RC_Mark up rate 5 - Value - Transfer transasaction & gas fee**: `Mark up rate 5 - Transfer transasaction & gas fee / Total Markup - For Referrence * (Revenue - COGs)`
     - **RC_Mark up rate 4 - Value - Business risk reserve**: `Mark up rate 4 - Business risk reserve / Total Markup - For Referrence * (Revenue - COGs)`
