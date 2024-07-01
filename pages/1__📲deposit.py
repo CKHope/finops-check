@@ -4,7 +4,12 @@ import pandas as pd
 st.title('Cryptocurrency Deposit Transaction Validator')
 
 # Helper function to truncate numbers
-def truncate(number, decimals):
+def truncate(number, tolerance):
+    str_tolerance = f"{tolerance:.15f}".rstrip('0')
+    if '.' in str_tolerance:
+        decimals = len(str_tolerance.split('.')[1])
+    else:
+        decimals = 0
     factor = 10.0 ** decimals
     return int(number * factor) / factor
 
@@ -31,7 +36,7 @@ def recalculate_and_validate_deposits(df, tolerances):
         discrepancies = []
         for col_name, tolerance in tolerances.items():
             original_col = col_name.replace('RC_', '')
-            truncated_value = truncate(row[col_name], int(-1 * round(tolerance).as_integer_ratio()[1].bit_length()))
+            truncated_value = truncate(row[col_name], tolerance)
             if abs(truncated_value - row[original_col]) > tolerance:
                 status = f"Invalid - Discrepancy in {original_col}"
                 discrepancies.append({
