@@ -29,6 +29,9 @@ def recalculate_and_validate_deposits(df, tolerances):
 
     for col, func in recalculations.items():
         df[col] = df.apply(func, axis=1)
+        tolerance = tolerances.get(col, None)
+        if tolerance is not None:
+            df[col] = df[col].apply(lambda x: truncate(x, tolerance))
 
     results = []
     for _, row in df.iterrows():
@@ -36,12 +39,11 @@ def recalculate_and_validate_deposits(df, tolerances):
         discrepancies = []
         for col_name, tolerance in tolerances.items():
             original_col = col_name.replace('RC_', '')
-            truncated_value = truncate(row[col_name], tolerance)
-            if abs(truncated_value - row[original_col]) > tolerance:
+            if abs(row[col_name] - row[original_col]) > tolerance:
                 status = f"Invalid - Discrepancy in {original_col}"
                 discrepancies.append({
                     'Column': original_col,
-                    'Expected': truncated_value,
+                    'Expected': row[col_name],
                     'Actual': row[original_col]
                 })
         
