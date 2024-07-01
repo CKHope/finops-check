@@ -54,16 +54,16 @@ if deposit_file:
     st.write("Deposits", deposit_df.head())
     
     tolerance_inputs = {
-        'RC_CLEO.Lit Sell GDR/USD - Reference': 1e-15,
+        'RC_CLEO.Lit Sell GDR/USD - Reference': 1e-2,
         'RC_Deposit Amount USD': 1e-10,
         'RC_GDR Client Receive': 1e-10,
         'RC_COGs': 1e-10,
         'RC_Revenue': 1e-10,
-        'RC_Mark up rate 5 - Value - Transfer transasaction & gas fee': 1e-10,
-        'RC_Mark up rate 4 - Value - Business risk reserve': 1e-10,
-        'RC_Mark up rate 3 - Value - Crypto to fiat conversion': 1e-10,
-        'RC_Mark up rate 2 - Value - Withdrawal transasaction & gas fee': 1e-10,
-        'RC_Mark up rate 1 - Value - Gold price fluctuation': 1e-10
+        'RC_Mark up rate 5 - Value - Transfer transasaction & gas fee': 1e-2,
+        'RC_Mark up rate 4 - Value - Business risk reserve': 1e-2,
+        'RC_Mark up rate 3 - Value - Crypto to fiat conversion': 1e-2,
+        'RC_Mark up rate 2 - Value - Withdrawal transasaction & gas fee': 1e-2,
+        'RC_Mark up rate 1 - Value - Gold price fluctuation': 1e-2
     }
 
     with st.sidebar.expander("Set Tolerances", expanded=True):
