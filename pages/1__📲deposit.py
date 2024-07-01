@@ -3,6 +3,11 @@ import pandas as pd
 
 st.title('Cryptocurrency Deposit Transaction Validator')
 
+# Helper function to truncate numbers
+def truncate(number, decimals):
+    factor = 10.0 ** decimals
+    return int(number * factor) / factor
+
 def recalculate_and_validate_deposits(df, tolerances):
     recalculations = {
         'RC_CLEO.Lit Sell GDR/USD - Reference': lambda row: row['CLEO.Lit buy X% (backup rate GDR/XAU) XAU/USD - reference'] * (100 + row['Total Markup - For Referrence']) / 100,
@@ -26,11 +31,12 @@ def recalculate_and_validate_deposits(df, tolerances):
         discrepancies = []
         for col_name, tolerance in tolerances.items():
             original_col = col_name.replace('RC_', '')
-            if abs(row[col_name] - row[original_col]) > tolerance:
+            truncated_value = truncate(row[col_name], int(-1 * round(tolerance).as_integer_ratio()[1].bit_length()))
+            if abs(truncated_value - row[original_col]) > tolerance:
                 status = f"Invalid - Discrepancy in {original_col}"
                 discrepancies.append({
                     'Column': original_col,
-                    'Expected': row[col_name],
+                    'Expected': truncated_value,
                     'Actual': row[original_col]
                 })
         
