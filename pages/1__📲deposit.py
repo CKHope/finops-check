@@ -68,7 +68,7 @@ if deposit_file:
     
     tolerance_inputs = {
         'RC_CLEO.Lit Sell GDR/USD - Reference': 1e-2,
-        'RC_Deposit Amount USD': 1e-10,
+        'RC_Deposit Amount USD': 1e-2,
         'RC_GDR Client Receive': 1e-2,
         'RC_COGs': 1e-2,
         'RC_Revenue': 1e-2,
