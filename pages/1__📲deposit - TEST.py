@@ -1,13 +1,17 @@
 import streamlit as st
 import pandas as pd
+import math
 
 st.title('Cryptocurrency Deposit Transaction Validator')
 
-# Helper function to perform high-precision calculation
+# Helper function to perform high-precision calculation with tolerance-based truncation
 def high_precision_calc(func):
-    def wrapper(*args):
-        result = func(*args)
-        return int(result * 1e18) / 1e18
+    def wrapper(row, tolerance):
+        result = func(row)
+        # Convert tolerance to a decimal place
+        decimal_places = abs(math.floor(math.log10(tolerance)))
+        # Truncate the result based on the tolerance
+        return round(result, decimal_places)
     return wrapper
 
 # Updated recalculations with high-precision wrapper
@@ -26,7 +30,7 @@ recalculations = {
 
 def recalculate_and_validate_deposits(df, tolerances):
     for col, func in recalculations.items():
-        df[col] = df.apply(func, axis=1)
+        df[col] = df.apply(lambda row: func(row, tolerances[col]), axis=1)
 
     results = []
     for _, row in df.iterrows():
@@ -101,7 +105,7 @@ with st.expander("About This App", expanded=True):
     This Streamlit app validates cryptocurrency deposit transactions based on uploaded CSV data. It performs the following steps:
     1. **Upload CSV**: Allows users to upload a CSV file containing deposit transaction data.
     2. **Recalculation and Validation**: Recalculates certain columns based on predefined formulas and compares them against expected values.
-    3. **High-Precision Calculations**: Uses a technique to improve floating-point arithmetic precision by multiplying and dividing by 1e18.
+    3. **Tolerance-Based Truncation**: Uses the provided tolerances to determine the appropriate decimal places for truncation in each calculation.
     4. **Tolerances**: Provides options to set tolerances for each recalculated column to account for numerical discrepancies.
     5. **Additional Columns**: Allows users to select additional columns from the CSV to display alongside validation results.
     6. **Recalculation Logic**: Displays the formulas used to recalculate each derived column based on the uploaded data.
@@ -111,8 +115,8 @@ with st.expander("About This App", expanded=True):
 
 with st.expander("Recalculation Logic", expanded=True):
     st.markdown("""
-    ### Recalculation Formulas (with High-Precision Calculation)
-    All formulas are wrapped in a high-precision calculation function that multiplies the result by 1e18 and then divides by 1e18 to mitigate floating-point arithmetic errors.
+    ### Recalculation Formulas (with Tolerance-Based Truncation)
+    All formulas are wrapped in a high-precision calculation function that truncates the result based on the provided tolerance for each column.
 
     - **RC_CLEO.Lit Sell GDR/USD - Reference**: `CLEO.Lit buy X% (backup rate GDR/XAU) XAU/USD - reference * (100 + Total Markup - For Referrence) / 100`
     - **RC_Deposit Amount USD**: `Deposit Amount OC * CLEO.lit Buy Token/USD Reference`
