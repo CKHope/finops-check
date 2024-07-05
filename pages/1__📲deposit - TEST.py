@@ -1,36 +1,46 @@
 import streamlit as st
 import pandas as pd
-import math
+from decimal import Decimal, getcontext
 
 st.title('Cryptocurrency Deposit Transaction Validator')
 
-# Helper function to perform high-precision calculation with tolerance-based truncation
+# Set a high precision for decimal calculations
+getcontext().prec = 28
+
+def get_max_precision(numbers):
+    return max(abs(Decimal(str(n)).as_tuple().exponent) for n in numbers if n != 0)
+
+# Helper function to perform high-precision calculation
 def high_precision_calc(func):
-    def wrapper(row, tolerance):
-        result = func(row)
-        # Convert tolerance to a decimal place
-        decimal_places = abs(math.floor(math.log10(tolerance)))
-        # Truncate the result based on the tolerance
-        return round(result, decimal_places)
+    def wrapper(row):
+        # Extract the values used in the calculation
+        values = [row[col] for col in row.index if pd.notna(row[col]) and isinstance(row[col], (int, float))]
+        max_precision = get_max_precision(values)
+        
+        # Perform the calculation using Decimal for high precision
+        result = func(*[Decimal(str(v)) for v in values])
+        
+        # Round to the maximum precision encountered
+        return float(round(result, max_precision))
     return wrapper
 
 # Updated recalculations with high-precision wrapper
 recalculations = {
-    'RC_CLEO.Lit Sell GDR/USD - Reference': high_precision_calc(lambda row: row['CLEO.Lit buy X% (backup rate GDR/XAU) XAU/USD - reference'] * (100 + row['Total Markup - For Referrence']) / 100),
-    'RC_Deposit Amount USD': high_precision_calc(lambda row: row['Deposit Amount OC'] * row['CLEO.lit Buy Token/USD Reference']),
-    'RC_GDR Client Receive': high_precision_calc(lambda row: row['RC_Deposit Amount USD'] / row['RC_CLEO.Lit Sell GDR/USD - Reference']),
-    'RC_COGs': high_precision_calc(lambda row: row['GDR Client Receive'] * row['CLEO.Lit buy X% (backup rate GDR/XAU) XAU/USD - reference']),
-    'RC_Revenue': high_precision_calc(lambda row: row['GDR Client Receive'] * row['RC_CLEO.Lit Sell GDR/USD - Reference']),
-    'RC_Mark up rate 5 - Value - Transfer transasaction & gas fee': high_precision_calc(lambda row: row['Mark up rate 5 - Transfer transasaction & gas fee'] / row['Total Markup - For Referrence'] * (row['Revenue'] - row['COGs'])),
-    'RC_Mark up rate 4 - Value - Business risk reserve': high_precision_calc(lambda row: row['Mark up rate 4 - Business risk reserve'] / row['Total Markup - For Referrence'] * (row['Revenue'] - row['COGs'])),
-    'RC_Mark up rate 3 - Value - Crypto to fiat conversion': high_precision_calc(lambda row: row['Mark up rate 3 - Crypto to fiat conversion'] / row['Total Markup - For Referrence'] * (row['Revenue'] - row['COGs'])),
-    'RC_Mark up rate 2 - Value - Withdrawal transasaction & gas fee': high_precision_calc(lambda row: row['Mark up rate 2 - Withdrawal transasaction & gas fee'] / row['Total Markup - For Referrence'] * (row['Revenue'] - row['COGs'])),
-    'RC_Mark up rate 1 - Value - Gold price fluctuation': high_precision_calc(lambda row: row['Mark up rate 1 - Gold Price Fluctuation'] / row['Total Markup - For Referrence'] * (row['Revenue'] - row['COGs']))
+    'RC_CLEO.Lit Sell GDR/USD - Reference': high_precision_calc(lambda a, b: a * (Decimal('100') + b) / Decimal('100')),
+    'RC_Deposit Amount USD': high_precision_calc(lambda a, b: a * b),
+    'RC_GDR Client Receive': high_precision_calc(lambda a, b: a / b),
+    'RC_COGs': high_precision_calc(lambda a, b: a * b),
+    'RC_Revenue': high_precision_calc(lambda a, b: a * b),
+    'RC_Mark up rate 5 - Value - Transfer transasaction & gas fee': high_precision_calc(lambda a, b, c, d: a / b * (c - d)),
+    'RC_Mark up rate 4 - Value - Business risk reserve': high_precision_calc(lambda a, b, c, d: a / b * (c - d)),
+    'RC_Mark up rate 3 - Value - Crypto to fiat conversion': high_precision_calc(lambda a, b, c, d: a / b * (c - d)),
+    'RC_Mark up rate 2 - Value - Withdrawal transasaction & gas fee': high_precision_calc(lambda a, b, c, d: a / b * (c - d)),
+    'RC_Mark up rate 1 - Value - Gold price fluctuation': high_precision_calc(lambda a, b, c, d: a / b * (c - d))
 }
 
 def recalculate_and_validate_deposits(df, tolerances):
     for col, func in recalculations.items():
-        df[col] = df.apply(lambda row: func(row, tolerances[col]), axis=1)
+        df[col] = df.apply(func, axis=1)
 
     results = []
     for _, row in df.iterrows():
@@ -105,7 +115,7 @@ with st.expander("About This App", expanded=True):
     This Streamlit app validates cryptocurrency deposit transactions based on uploaded CSV data. It performs the following steps:
     1. **Upload CSV**: Allows users to upload a CSV file containing deposit transaction data.
     2. **Recalculation and Validation**: Recalculates certain columns based on predefined formulas and compares them against expected values.
-    3. **Tolerance-Based Truncation**: Uses the provided tolerances to determine the appropriate decimal places for truncation in each calculation.
+    3. **High-Precision Calculations**: Uses Python's Decimal type for high-precision arithmetic, maintaining the maximum precision of input numbers.
     4. **Tolerances**: Provides options to set tolerances for each recalculated column to account for numerical discrepancies.
     5. **Additional Columns**: Allows users to select additional columns from the CSV to display alongside validation results.
     6. **Recalculation Logic**: Displays the formulas used to recalculate each derived column based on the uploaded data.
@@ -115,8 +125,8 @@ with st.expander("About This App", expanded=True):
 
 with st.expander("Recalculation Logic", expanded=True):
     st.markdown("""
-    ### Recalculation Formulas (with Tolerance-Based Truncation)
-    All formulas are wrapped in a high-precision calculation function that truncates the result based on the provided tolerance for each column.
+    ### Recalculation Formulas (with High-Precision Calculation)
+    All formulas are wrapped in a high-precision calculation function that uses Python's Decimal type for accurate arithmetic and maintains the maximum precision of input numbers.
 
     - **RC_CLEO.Lit Sell GDR/USD - Reference**: `CLEO.Lit buy X% (backup rate GDR/XAU) XAU/USD - reference * (100 + Total Markup - For Referrence) / 100`
     - **RC_Deposit Amount USD**: `Deposit Amount OC * CLEO.lit Buy Token/USD Reference`
