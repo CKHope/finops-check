@@ -55,8 +55,46 @@ def recalculate_and_validate_deposits(df, tolerances):
     
     return pd.DataFrame(results)
 
-# Rest of the Streamlit app code remains the same
-...
+deposit_file = st.file_uploader("Upload Deposit CSV", type=["csv"])
+
+if deposit_file:
+    deposit_df = pd.read_csv(deposit_file)
+    st.write("Deposits", deposit_df.head())
+    
+    tolerance_inputs = {
+        'RC_CLEO.Lit Sell GDR/USD - Reference': 1e-2,
+        'RC_Deposit Amount USD': 1e-2,
+        'RC_GDR Client Receive': 1e-2,
+        'RC_COGs': 1e-2,
+        'RC_Revenue': 1e-2,
+        'RC_Mark up rate 5 - Value - Transfer transasaction & gas fee': 1e-2,
+        'RC_Mark up rate 4 - Value - Business risk reserve': 1e-2,
+        'RC_Mark up rate 3 - Value - Crypto to fiat conversion': 1e-2,
+        'RC_Mark up rate 2 - Value - Withdrawal transasaction & gas fee': 1e-2,
+        'RC_Mark up rate 1 - Value - Gold price fluctuation': 1e-2
+    }
+
+    with st.sidebar.expander("Set Tolerances", expanded=True):
+        tolerances = {col: st.number_input(f"Tolerance for {col}", min_value=0.0, format="%e", value=val, step=1e-15) 
+                      for col, val in tolerance_inputs.items()}
+
+    selected_columns = st.sidebar.multiselect("Additional Columns to Display", deposit_df.columns.tolist())
+
+    deposit_results = recalculate_and_validate_deposits(deposit_df, tolerances)
+    
+    display_columns = ['Transaction ID', 'Status', 'Discrepancies']
+    for col in tolerances.keys():
+        original_col = col.replace('RC_', '')
+        display_columns.extend([original_col, col])
+    display_columns.extend(selected_columns)
+    
+    st.subheader("Validation Results")
+    display_results = deposit_results.copy()
+    display_results['Discrepancies'] = display_results['Discrepancies'].apply(lambda x: ', '.join([f"{item['Column']}: Expected {item['Expected']}, Actual {item['Actual']}" for item in x]))
+    st.write(display_results[display_columns])
+    
+    invalid_count = (deposit_results['Status'] != 'Valid').sum()
+    st.write("Invalid transactions:" if invalid_count else "All transactions are valid.", invalid_count)
 
 with st.expander("About This App", expanded=True):
     st.markdown("""
