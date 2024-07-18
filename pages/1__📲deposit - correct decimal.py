@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from decimal import Decimal, getcontext
+from decimal import Decimal, getcontext, ROUND_DOWN
 
 # Set the precision level
 getcontext().prec = 18
@@ -9,13 +9,13 @@ st.title('Cryptocurrency Deposit Transaction Validator')
 
 # Helper function to truncate numbers
 def truncate(number, tolerance):
-    str_tolerance = f"{tolerance:.15f}".rstrip('0')
+    str_tolerance = f"{tolerance:.18f}".rstrip('0')
     if '.' in str_tolerance:
         decimals = len(str_tolerance.split('.')[1])
     else:
         decimals = 0
     factor = Decimal('1.' + '0' * decimals)
-    return int(number * factor) / factor
+    return number.quantize(factor, rounding=ROUND_DOWN)
 
 def recalculate_and_validate_deposits(df, tolerances):
     recalculations = {
@@ -35,7 +35,7 @@ def recalculate_and_validate_deposits(df, tolerances):
         df[col] = df.apply(func, axis=1)
         tolerance = tolerances.get(col, None)
         if tolerance is not None:
-            df[col] = df[col].apply(lambda x: truncate(x, tolerance))
+            df[col] = df[col].apply(lambda x: truncate(x, Decimal(tolerance)))
 
     results = []
     for _, row in df.iterrows():
@@ -84,7 +84,7 @@ if deposit_file:
     }
 
     with st.sidebar.expander("Set Tolerances", expanded=True):
-        tolerances = {col: st.number_input(f"Tolerance for {col}", min_value=0.0, format="%e", value=val, step=1e-18) 
+        tolerances = {col: st.number_input(f"Tolerance for {col}", min_value=0.0, format="%e", value=val, step=1e-15) 
                       for col, val in tolerance_inputs.items()}
 
     selected_columns = st.sidebar.multiselect("Additional Columns to Display", deposit_df.columns.tolist())
