@@ -73,7 +73,7 @@ if deposit_file:
     tolerance_inputs = {
         'RC_CLEO.Lit Sell GDR/USD - Reference': 1e-2,
         'RC_Deposit Amount USD': 1e-2,
-        'RC_GDR Client Receive': 1e-2,
+        'RC_GDR Client Receive': 1e-18,
         'RC_COGs': 1e-2,
         'RC_Revenue': 1e-2,
         'RC_Mark up rate 5 - Value - Transfer transasaction & gas fee': 1e-2,
@@ -84,7 +84,7 @@ if deposit_file:
     }
 
     with st.sidebar.expander("Set Tolerances", expanded=True):
-        tolerances = {col: st.number_input(f"Tolerance for {col}", min_value=0.0, format="%e", value=val, step=1e-15) 
+        tolerances = {col: st.number_input(f"Tolerance for {col}", min_value=0.0, format="%e", value=val, step=1e-18) 
                       for col, val in tolerance_inputs.items()}
 
     selected_columns = st.sidebar.multiselect("Additional Columns to Display", deposit_df.columns.tolist())
