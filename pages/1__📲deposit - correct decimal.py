@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from decimal import Decimal, getcontext, ROUND_DOWN
+from decimal import Decimal, getcontext, ROUND_DOWN, InvalidOperation
 
 # Set the precision level
 getcontext().prec = 18
@@ -9,13 +9,16 @@ st.title('Cryptocurrency Deposit Transaction Validator')
 
 # Helper function to truncate numbers
 def truncate(number, tolerance):
-    str_tolerance = f"{tolerance:.18f}".rstrip('0')
+    str_tolerance = f"{tolerance:.15f}".rstrip('0')
     if '.' in str_tolerance:
         decimals = len(str_tolerance.split('.')[1])
     else:
         decimals = 0
     factor = Decimal('1.' + '0' * decimals)
-    return number.quantize(factor, rounding=ROUND_DOWN)
+    try:
+        return number.quantize(factor, rounding=ROUND_DOWN)
+    except InvalidOperation:
+        return number  # Return the original number if quantize fails
 
 def recalculate_and_validate_deposits(df, tolerances):
     recalculations = {
@@ -73,7 +76,7 @@ if deposit_file:
     tolerance_inputs = {
         'RC_CLEO.Lit Sell GDR/USD - Reference': 1e-2,
         'RC_Deposit Amount USD': 1e-2,
-        'RC_GDR Client Receive': 1e-18,
+        'RC_GDR Client Receive': 1e-2,
         'RC_COGs': 1e-2,
         'RC_Revenue': 1e-2,
         'RC_Mark up rate 5 - Value - Transfer transasaction & gas fee': 1e-2,
